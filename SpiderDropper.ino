@@ -28,11 +28,14 @@ const int REMOTE_CONTROL_PIN = 2;
 
 // Servo
 
-// Servo angles for the open and closed clutch positions.
+// Servo angles for the open and closed and neutral clutch positions.
 // The open clutch disconnects the motor from the drivetrain.
 // The closed clutch connects the motor to wind up the spider.
+// The neutral clutch is in between the two and used when we
+// drop the spider to minimize friction with the servo.
 const int CLUTCH_CLOSED_ANGLE = 80;
-const int CLUTCH_OPEN_ANGLE = 115;
+const int CLUTCH_NEUTRAL_ANGLE = 115;
+const int CLUTCH_OPEN_ANGLE = 130;
 
 // Motor
 
@@ -45,10 +48,10 @@ const int MOTOR_DIRECTION = LOW;
 // The time we run the motor when winding up the spider in ms.
 // You'll most likely need to change this value to adjust
 // for motor speed, winch diameter and string length.
-const unsigned long SPIDER_WIND_UP_TIME_MS = 40 * 1000UL;
+const unsigned long SPIDER_WIND_UP_TIME_MS = 60 * 1000UL;
 // The time we wait before winding the spider back up after
 // letting it drop.
-const unsigned long SPIDER_BOTTOM_TIME_MS = 10 * 1000UL;
+const unsigned long SPIDER_BOTTOM_TIME_MS = 2 * 1000UL;
 
 Servo clutch_servo;
 RCSwitch remote_control = RCSwitch();
@@ -90,13 +93,35 @@ void resetRemote() {
   remote_control.resetAvailable();
 }
 
+
+// Returns the opposite MOTOR_DIRECTION.
+int oppositeDirection() {
+  return MOTOR_DIRECTION == LOW ? HIGH : LOW;
+}
+
 void dropSpider() {
   Serial.println("Dropping spider :)");
 
-  // Ensure the motor is off.
+  // Stop the motor, in case we were asked to drop while winding.
   analogWrite(MOTOR_SPEED_PIN, 0);
-  // Disengage the clutch to let the spider free-fall.
+  busyWait(500);
+
+  // Turn a little bit in the opposite direction to the wind-up
+  // to ensure we overcome initial friction. In my case the
+  // winch diamter was very slow for a pretty light spider
+  // so we need a little nudge first.
+  analogWrite(MOTOR_DIRECTION_PIN, oppositeDirection());
+  analogWrite(MOTOR_SPEED_PIN, 100);
+  busyWait(1000);
+  analogWrite(MOTOR_SPEED_PIN, 0);
+
+  // Open the clutch to let the spider free-fall.
+  // After the initial nudge to disengage the axle
+  // put the servo in neutral to minimize friction.
   clutch_servo.write(CLUTCH_OPEN_ANGLE);
+  busyWait(500);
+  clutch_servo.write(CLUTCH_NEUTRAL_ANGLE);
+
   // Wait for the spider to fall and people to be excited :-)
   busyWait(SPIDER_BOTTOM_TIME_MS);
 }
