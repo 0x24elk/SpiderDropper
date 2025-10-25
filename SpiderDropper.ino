@@ -33,9 +33,9 @@ const int REMOTE_CONTROL_PIN = 2;
 // The closed clutch connects the motor to wind up the spider.
 // The neutral clutch is in between the two and used when we
 // drop the spider to minimize friction with the servo.
-const int CLUTCH_CLOSED_ANGLE = 80;
-const int CLUTCH_NEUTRAL_ANGLE = 115;
-const int CLUTCH_OPEN_ANGLE = 130;
+const int CLUTCH_CLOSED_ANGLE = 120;
+const int CLUTCH_NEUTRAL_ANGLE = 100;
+const int CLUTCH_OPEN_ANGLE = 80;
 
 // Motor
 
@@ -48,7 +48,7 @@ const int MOTOR_DIRECTION = LOW;
 // The time we run the motor when winding up the spider in ms.
 // You'll most likely need to change this value to adjust
 // for motor speed, winch diameter and string length.
-const unsigned long SPIDER_WIND_UP_TIME_MS = 60 * 1000UL;
+const unsigned long SPIDER_WIND_UP_TIME_MS = 10 * 1000UL;
 // The time we wait before winding the spider back up after
 // letting it drop.
 const unsigned long SPIDER_BOTTOM_TIME_MS = 2 * 1000UL;
@@ -112,7 +112,7 @@ void dropSpider() {
   // so we need a little nudge first.
   analogWrite(MOTOR_DIRECTION_PIN, oppositeDirection());
   analogWrite(MOTOR_SPEED_PIN, 100);
-  busyWait(1000);
+  busyWait(300);
   analogWrite(MOTOR_SPEED_PIN, 0);
 
   // Open the clutch to let the spider free-fall.
